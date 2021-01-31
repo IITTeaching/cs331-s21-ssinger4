@@ -22,7 +22,11 @@ def captured_output():
 
 # implement this function
 def is_perfect(n):
-    pass
+    sum = 0
+    for i in range(1, n):
+        if (n % i == 0):
+            sum = sum + i
+    return sum == n
 
 # (3 points)
 def test1():
@@ -40,7 +44,11 @@ def test1():
 
 # implement this function
 def multiples_of_3_and_5(n):
-    pass
+    sum = 0
+    for i in range(1, n):
+        if (i % 3 == 0 or i % 5 == 0):
+            sum = sum + i
+    return sum
 
 # (3 points)
 def test2():
@@ -52,8 +60,21 @@ def test2():
 #################################################################################
 # EXERCISE 3
 #################################################################################
-def integer_right_triangles(p):
-    pass
+def integer_right_triangles(p): 
+    list = [] 
+    if p % 2 != 0:
+        return 0
+    else: 
+        count = 0
+        for b in range(1, p // 2): 
+            a = p / 2 * ((p - 2 * b) / (p - b)) 
+            A = int(a) 
+            if (a == A): 
+                ab = tuple(sorted((A, b))) 
+                if ab not in list: 
+                    count += 1
+                    list.append(ab)
+        return count
 
 def test3():
     tc = unittest.TestCase()
@@ -67,7 +88,23 @@ def test3():
 
 # implement this function
 def gen_pattern(chars):
-    pass
+    l = len(chars)
+    s = (l * 2) - 1
+    def ques(a,b):
+        a = ''.join(reversed(a))[:b]
+        s = a + ''.join(reversed(a))[1:]
+        return s
+        
+    r = len('.'.join(ques(chars,l)))
+    for i in range(1, int((s/2) + 1)):
+        x = ques(chars,i)
+        y = '.'.join(x).center(r, '.')
+        print(y)
+    for i in range(int((s/2) + 1), 0, -1):
+        x = ques(chars,i)
+        y = ".".join(x).center(r, '.')
+        print(y)
+        
 
 def test4():
     tc = unittest.TestCase()
