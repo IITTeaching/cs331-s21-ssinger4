@@ -116,40 +116,79 @@ class ArrayList:
         returns `str(x)` for all values `x` in this list, separated by commas
         and enclosed by square brackets. E.g., for a list containing values
         1, 2 and 3, returns '[1, 2, 3]'."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        if self.len == 0:
+                return "[]"
+        l = "["
+        for i in range(len(self.data)):
+            l += str(self.data[i])
+            if i != len(self.data) - 1:
+                l += ", "
+        l += "]"
+        return l
 
     def __repr__(self):
         """Supports REPL inspection. (Same behavior as `str`.)"""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        return self.__str__()
 
 
     ### single-element manipulation ###
 
     def append(self, value):
         """Appends value to the end of this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        if self.len == len(self.data):
+            e = ConstrainedList((self.len * 2) + 1)
+            for i in range(self.len):
+                e[i] = self.data[i]
+            self.data = e
+        self.data[self.len] = value
+        self.len += 1
 
     def insert(self, idx, value):
         """Inserts value at position idx, shifting the original elements down the
         list, as needed. Note that inserting a value at len(self) --- equivalent
         to appending the value --- is permitted. Raises IndexError if idx is invalid."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        n = self._normalize_idx(idx)
+        if n > self.len:
+            raise IndexError
+        if self.len == len(self.data):
+            s = ConstrainedList((self.len * 2) + 1)
+            for i in range(idx):
+                s[i] = self.data[i]
+            s[idx] = value
+            for i in range(self.len, idx, -1):
+                s[i] = self.data[i - 1]
+            self.data = s
+        else:
+            for i in range(self.len, idx, -1):
+                self.data[i] = self.data[i - 1]
+            self.data[idx] = value
+        self.len += 1
 
     def pop(self, idx=-1):
         """Deletes and returns the element at idx (which is the last element,
         by default)."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        r = self.data[idx]
+        if idx == -1:
+            self.data[idx] = None
+            return r
+        else:
+            self.data[idx] = None
+            for i in range(idx+1, self.len):
+                self.data[i - 1] = self.data[i]
+        self.len -= 1
+        return r
 
     def remove(self, value):
         """Removes the first (closest to the front) instance of value from the
         list. Raises a ValueError if value is not found in the list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        ind = -1
+        for i in range(self.len):
+            if self.data[i] == value:
+                ind = i
+                break
+        if ind == -1:
+            raise ValueError
+        self.pop(ind)
 
 
     ### predicates (T/F queries) ###
@@ -157,44 +196,65 @@ class ArrayList:
     def __eq__(self, other):
         """Returns True if this ArrayList contains the same elements (in order) as
         other. If other is not an ArrayList, returns False."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        if self.len != len(other):
+            return False
+        for i in range(self.len):
+            if self.data[i] != other[i]:
+                return False
+        return True
 
     def __contains__(self, value):
         """Implements `val in self`. Returns true if value is found in this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        for i in range(self.len):
+            if self.data[i] == value:
+                return True
+        return False
 
 
     ### queries ###
 
     def __len__(self):
         """Implements `len(self)`"""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        return self.len
 
     def min(self):
         """Returns the minimum value in this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        min = self.data[0]
+        for i in range(1, self.len):
+            if min > self.data[i]:
+                min = self.data[i]
+        return min
 
     def max(self):
         """Returns the maximum value in this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        max = self.data[0]
+        for i in range(1, self.len):
+            if max < self.data[i]:
+                max = self.data[i]
+        return max
 
     def index(self, value, i=0, j=None):
         """Returns the index of the first instance of value encountered in
         this list between index i (inclusive) and j (exclusive). If j is not
         specified, search through the end of the list for value. If value
         is not in the list, raise a ValueError."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        if j == None:
+            j = self.len
+        j = self._normalize_idx(j)
+        for x in range(i, j):
+            if self.data[x] == value:
+                return x
+        raise ValueError
 
     def count(self, value):
         """Returns the number of times value appears in this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        if self.__contains__(value) == False:
+                return 0
+        count = 0
+        for i in range(self.len):
+            if self.data[i] == value:
+                count += 1
+        return count
 
 
     ### bulk operations ###
@@ -203,8 +263,12 @@ class ArrayList:
         """Implements `self + other_array_list`. Returns a new ArrayList
         instance that contains the values in this list followed by those
         of other."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        c = ArrayList()
+        for i in range(self.len):
+            c.append(self.data[i])
+        for i in range(len(other)):
+            c.append(other[i])
+        return c
 
     def clear(self):
         self.data = ConstrainedList() # don't change this!
@@ -213,21 +277,23 @@ class ArrayList:
     def copy(self):
         """Returns a new ArrayList instance (with a separate data store), that
         contains the same values as this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        c = ArrayList()
+        for i in range(self.len):
+            c.append(self.data[i])
+        return c
 
     def extend(self, other):
         """Adds all elements, in order, from other --- an Iterable --- to this list."""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        for i in other:
+            self.append(i)
 
 
     ### iteration ###
 
     def __iter__(self):
         """Supports iteration (via `iter(self)`)"""
-        ### BEGIN SOLUTION
-        ### END SOLUTION
+        for i in range(self.len):
+            yield self.data[i]
 
 ################################################################################
 # TEST CASES
