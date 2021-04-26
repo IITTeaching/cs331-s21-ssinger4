@@ -1,11 +1,8 @@
-#changes
-
 from unittest import TestCase
 import random
 
 class HBStree:
     """This is an immutable binary search tree with history.
-
     Each insert and delete operation creates a new version of the tree. The data
     structure allows past versions to be accessed.
     """
@@ -53,6 +50,16 @@ class HBStree:
         KeyError, if key does not exist.
         """
         # BEGIN SOLUTION
+        current = self.get_current_root()
+        while not (current == None):
+            x = current.val
+            if x == key:
+                return key
+            if x < key:
+                current = current.right
+            else:
+                current = current.left
+        raise KeyError
         # END SOLUTION
 
     def __contains__(self, el):
@@ -60,6 +67,15 @@ class HBStree:
         Return True if el exists in the current version of the tree.
         """
         # BEGIN SOLUTION
+        current = self.root_versions[-1]
+        while current:
+            if current.val == el:
+                return True
+            elif current.val > el:
+                current = current.left
+            else:
+                current = current.right
+        return False
         # END SOLUTION
 
     def insert(self,key):
@@ -69,11 +85,57 @@ class HBStree:
         from creating a new version.
         """
         # BEGIN SOLUTION
+        if key in self:
+            pass
+        else:
+            def add(tree,val):
+                if(not tree):
+                    return HBStree.INode(val, None, None)
+                if(tree.val > val):
+                    return HBStree.INode(tree.val, add(tree.left,val), tree.right)
+                elif(tree.val < val):
+                    return HBStree.INode(tree.val, tree.left, add(tree.right,val))
+            if self.root_versions[-1]:
+                self.root_versions.append(add(self.root_versions[-1], key))
+            else:
+                self.root_versions.append(HBStree.INode(key, None, None))
         # END SOLUTION
 
     def delete(self,key):
         """Delete key from the tree, creating a new version of the tree. If key does not exist in the current version of the tree, then do nothing and refrain from creating a new version."""
         # BEGIN SOLUTION
+        if key in self:
+            node = self.root_versions[-1]
+            changes = []
+            while True:
+                if node == None or key == node.val:
+                    deletedNode = node
+                    break
+                if node.left != None and key < node.val:
+                    changes.append([node, -1])
+                    node = node.left
+                if node.right != None and key > node.val:
+                    changes.append([node, 1])
+                    node = node.right
+            p = []
+            if node.left != None:
+                node = node.left
+                while node.right != None:
+                    p.append(node)
+                    node = node.right
+            Node = None
+            if len(p) != 0:
+                for index in range(len(p) - 1, 0, -1):
+                    Node = self.INode(p[index].val, p[index].left, Node)
+                Node = self.INode(node.val, deletedNode.left, Node)
+            else:
+                Node = deletedNode.right
+            for index in range(len(changes) - 1 , -1, -1):
+                if changes[index][1] == -1:
+                    Node = self.INode(changes[index][0].val, Node, changes[index][0].right)
+                else:
+                    Node = self.INode(changes[index][0].val, changes[index][0].left, Node)
+            self.root_versions.append(Node)
         # END SOLUTION
 
     @staticmethod
@@ -145,6 +207,14 @@ class HBStree:
         if timetravel < 0 or timetravel >= len(self.root_versions):
             raise IndexError(f"valid versions for time travel are 0 to {len(self.root_versions) -1}, but was {timetravel}")
         # BEGIN SOLUTION
+        def order(root):
+            if root == None:
+                return 
+            else:
+                yield from order(root.left)
+                yield root.val
+                yield from order(root.right)
+        yield from order(self.root_versions[-timetravel-1])
         # END SOLUTION
 
     @staticmethod
