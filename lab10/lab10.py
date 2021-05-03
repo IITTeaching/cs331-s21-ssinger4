@@ -15,6 +15,9 @@ class AVLTree:
 
         def rotate_left(self):
             ### BEGIN SOLUTION
+            n = self.right
+            self.val, n.val = n.val, self.val
+            self.right, n.right, self.left, n.left = n.right, n.left, n, self.left
             ### END SOLUTION
 
         @staticmethod
@@ -27,21 +30,106 @@ class AVLTree:
     def __init__(self):
         self.size = 0
         self.root = None
+        self.fixMyCode = None
 
     @staticmethod
     def rebalance(t):
         ### BEGIN SOLUTION
+        if not t == None:
+            if AVLTree.heightDifference(t) < -1:
+                if AVLTree.heightDifference(t.left) >= 1:
+                    t.left.rotate_left()
+                t.rotate_right()
+            elif AVLTree.heightDifference(t) > 1:
+                if AVLTree.heightDifference(t.right) <= -1:
+                    t.right.rotate_right()
+                t.rotate_left()
         ### END SOLUTION
+    @staticmethod
+    def heightDifference(cur):
+        if not cur == None:
+            return AVLTree.Node.height(cur.right) - AVLTree.Node.height(cur.left)
+        return 0
 
     def add(self, val):
         assert(val not in self)
         ### BEGIN SOLUTION
+        cur = self.root
+        self.root = self.addHelper(val,cur)
         ### END SOLUTION
+
+    def addHelper(self,key,cur):
+        if cur == None:
+            self.size+=1
+            return self.Node(key,None,None)
+            
+        elif key < cur.val:
+            left = self.addHelper(key,cur.left)
+            cur.left = left
+            AVLTree.rebalance(cur)
+            return cur
+        elif key > cur.val:
+            right = self.addHelper(key,cur.right)
+            cur.right = right
+            AVLTree.rebalance(cur)
+            return cur
 
     def __delitem__(self, val):
         assert(val in self)
         ### BEGIN SOLUTION
+        cur = self.root
+        self.root = self.deleteHelper(val,cur)
+        if not self.fixMyCode == None:
+            self.forceRebalance(self.fixMyCode.val,self.root)
+            self.fixMyCode = None
         ### END SOLUTION
+
+    def forceRebalance(self,key,cur):
+        if cur == None:
+            return None
+        elif cur.val == key:
+            AVLTree.rebalance(cur)
+        elif key < cur.val:
+            self.forceRebalance(key,cur.left)
+            AVLTree.rebalance(cur)
+        elif key > cur.val:
+            self.forceRebalance(key,cur.right)
+            AVLTree.rebalance(cur)
+
+    def deleteHelper(self,key,cur):
+        if cur == None:
+            return None
+        elif key == cur.val:
+            noded = None
+            self.size-=1
+            if not cur.left == None and not cur.right == None:
+                n = self.specialDelete(cur.left)
+                cur.val = n
+                cur.left = self.deleteHelper(n,cur.left)
+                noded = cur
+                self.fixMyCode = noded
+            elif cur.left == None and not cur.right == None:
+                noded = cur.right
+            elif cur.right == None and not cur.left == None:
+                noded = cur.left
+            return noded
+        elif key > cur.val:
+            right = self.deleteHelper(key,cur.right)
+            cur.right = right
+            AVLTree.rebalance(cur)
+            return cur
+        elif key < cur.val:
+            left = self.deleteHelper(key,cur.left)
+            cur.left = left
+            AVLTree.rebalance(cur)
+            return cur
+
+
+    def specialDelete(self,cur):
+        if cur.right == None:
+            return cur.val
+        else:
+            return self.specialDelete(cur.right)
 
     def __contains__(self, val):
         def contains_rec(node):
@@ -107,6 +195,7 @@ def height(t):
     else:
         return max(1+height(t.left), 1+height(t.right))
 
+    
 def traverse(t, fn):
     if t:
         fn(t)
@@ -145,7 +234,7 @@ def test_lr_fix_simple():
 
     for x in [3, 1, 2]:
         t.add(x)
-
+    t.pprint()
     tc.assertEqual(height(t.root), 2)
     tc.assertEqual([t.root.left.val, t.root.val, t.root.right.val], [1, 2, 3])
 
